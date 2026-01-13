@@ -29,6 +29,8 @@ class Emacs < Formula
   depends_on "gmp"
   depends_on "gnutls"
   depends_on "tree-sitter@0.25"
+  depends_on "libgccjit"
+  depends_on "gcc"
 
   uses_from_macos "libxml2"
   uses_from_macos "ncurses"
@@ -58,7 +60,15 @@ class Emacs < Formula
       --without-imagemagick
       --without-selinux
       --with-tree-sitter
+      --with-native-compilation=aot
     ]
+
+    # required to find headers from homebrew libxml2 rather than system
+    ENV["LIBXML2_CFLAGS"] = "-isystem #{Formula["libxml2"].opt_include}/libxml2" unless OS.mac?
+
+    libgccjit_lib = "#{Formula["libgccjit"].lib}/gcc/current"
+    ENV.prepend_path "LIBRARY_PATH", "#{libgccjit_lib}"
+    ENV.append "LDFLAGS", "-Wl,-rpath,#{libgccjit_lib}"
 
     if build.head?
       ENV.prepend_path "PATH", Formula["gnu-sed"].opt_libexec/"gnubin"
